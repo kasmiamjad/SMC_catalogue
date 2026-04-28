@@ -106,19 +106,25 @@ $grouped_menu = get_grouped_menu($uniqueCategories, is_admin_view());
 											<div class="w-full flex flex-auto flex-col items-start justify-center px-15">
 												<div class="header-module no-rotate">
 													<div class="lqd-fancy-menu lqd-custom-menu lqd-menu-td-none">
-														<ul class="reset-ul" data-localscroll="true" data-localscroll-options='{"itemsSelector":"> li > a", "trackWindowScroll": true, "includeParentAsOffset": true}'>
+														<ul class="reset-ul category-accordion" data-localscroll="true" data-localscroll-options='{"itemsSelector":"> li > a", "trackWindowScroll": true, "includeParentAsOffset": true}'>
 															<?php foreach ($grouped_menu as $group): ?>
-																<li class="mb-15 mt-25 first:mt-0">
-																	<h6 class="text-primary text-12 tracking-1 uppercase mb-10">
-																		<?= htmlspecialchars($group['parent']); ?>
-																	</h6>
-																	<ul class="reset-ul">
-																		<?php foreach ($group['children'] as $category): ?>
-																			<li class="mb-10">
-																				<a href="#" class="category-link flex leading-1/5em hover:text-primary" aria-current="page" data-category="<?= htmlspecialchars($category); ?>"><?= htmlspecialchars($category); ?></a>
-																			</li>
-																		<?php endforeach; ?>
-																	</ul>
+																<li class="cat-group mb-10">
+																	<details class="cat-group-details">
+																		<summary class="cat-parent flex justify-between items-center cursor-pointer py-5 text-14 font-bold uppercase tracking-1 hover:text-primary"
+																				 data-parent="<?= htmlspecialchars($group['parent']); ?>">
+																			<span><?= htmlspecialchars($group['parent']); ?></span>
+																			<span class="cat-parent-arrow">+</span>
+																		</summary>
+																		<ul class="reset-ul cat-children pl-15 pt-5">
+																			<?php foreach ($group['children'] as $category): ?>
+																				<li class="mb-5">
+																					<a href="#"
+																					   class="category-link flex leading-1/5em hover:text-primary text-13"
+																					   data-category="<?= htmlspecialchars($category); ?>"><?= htmlspecialchars($category); ?></a>
+																				</li>
+																			<?php endforeach; ?>
+																		</ul>
+																	</details>
 																</li>
 															<?php endforeach; ?>
 									                    </ul>
