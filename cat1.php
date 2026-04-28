@@ -23,6 +23,8 @@ if (file_exists($jsonFilePath)) {
                 $uniqueCategories[] = $product['product_category'];
             }
         }
+        require_once __DIR__ . '/lib/category_helper.php';
+        $grouped_menu = get_grouped_menu($uniqueCategories, is_admin_view());
 
 ?>
 
@@ -118,11 +120,20 @@ if (file_exists($jsonFilePath)) {
 												<div class="header-module no-rotate">
 													<div class="lqd-fancy-menu lqd-custom-menu lqd-menu-td-none">
 														<ul class="reset-ul" data-localscroll="true" data-localscroll-options='{"itemsSelector":"> li > a", "trackWindowScroll": true, "includeParentAsOffset": true}'>
-															<?php foreach ($uniqueCategories as $category) { ?>
-															<li class="mb-15">
-																<a class="flex leading-1/5em hover:text-primary" href="#banner" aria-current="page"><?php echo htmlspecialchars($category); ?></a>
-															</li>
-															<?php } ?>
+															<?php foreach ($grouped_menu as $group): ?>
+																<li class="mb-15 mt-25 first:mt-0">
+																	<h6 class="text-primary text-12 tracking-1 uppercase mb-10">
+																		<?= htmlspecialchars($group['parent']); ?>
+																	</h6>
+																	<ul class="reset-ul">
+																		<?php foreach ($group['children'] as $category): ?>
+																			<li class="mb-10">
+																				<a class="flex leading-1/5em hover:text-primary" href="#banner" aria-current="page"><?= htmlspecialchars($category); ?></a>
+																			</li>
+																		<?php endforeach; ?>
+																	</ul>
+																</li>
+															<?php endforeach; ?>
 														</ul>
 													</div>
 												</div>

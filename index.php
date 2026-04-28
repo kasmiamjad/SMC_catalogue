@@ -24,6 +24,9 @@ if (file_exists($jsonFilePath)) {
         }
     }
 }
+
+require_once __DIR__ . '/lib/category_helper.php';
+$grouped_menu = get_grouped_menu($uniqueCategories, is_admin_view());
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -301,15 +304,23 @@ if (file_exists($jsonFilePath)) {
 
                                                     <ul id="category-list" class="reset-ul" data-localscroll="true"
                                                         data-localscroll-options='{"itemsSelector":"> li > a", "trackWindowScroll": true, "includeParentAsOffset": true}'>
-                                                        <?php foreach ($uniqueCategories as $category): ?>
-                                                            <li class="mb-15">
-                                                                <a href="#"
-                                                                    class="category-link flex leading-1/5em hover:text-primary"
-                                                                    aria-current="page"
-                                                                    data-category="<?= htmlspecialchars($category); ?>"><?= htmlspecialchars($category); ?></a>
+                                                        <?php foreach ($grouped_menu as $group): ?>
+                                                            <li class="mb-15 mt-25 first:mt-0">
+                                                                <h6 class="text-primary text-12 tracking-1 uppercase mb-10">
+                                                                    <?= htmlspecialchars($group['parent']); ?>
+                                                                </h6>
+                                                                <ul class="reset-ul">
+                                                                    <?php foreach ($group['children'] as $category): ?>
+                                                                        <li class="mb-10">
+                                                                            <a href="#"
+                                                                                class="category-link flex leading-1/5em hover:text-primary"
+                                                                                aria-current="page"
+                                                                                data-category="<?= htmlspecialchars($category); ?>"><?= htmlspecialchars($category); ?></a>
+                                                                        </li>
+                                                                    <?php endforeach; ?>
+                                                                </ul>
                                                             </li>
                                                         <?php endforeach; ?>
-
                                                     </ul>
                                                 </div>
                                             </div>
