@@ -11,7 +11,13 @@ __MACOSX/
 
 # Logs and reports
 *.log
+log.txt
 parent_category_migration_report.txt
+
+# Project specific ignores
+hub-html-1.5/
+*.zip
+scratch/
 
 # Note: data.json is INTENTIONALLY committed for now.
 # It's a runtime cache from Odoo, but committing it makes the 
