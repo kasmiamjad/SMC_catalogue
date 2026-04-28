@@ -58,6 +58,22 @@ $grouped_menu = get_grouped_menu($uniqueCategories, is_admin_view());
             background: #fff !important;
         }
 
+        /* Accordion Menu Styles */
+        .category-accordion summary { list-style: none; }
+        .category-accordion summary::-webkit-details-marker { display: none; }
+        .category-accordion details[open] > summary .cat-parent-arrow { transform: rotate(45deg); }
+        .category-accordion .cat-parent-arrow {
+            display: inline-block;
+            transition: transform 0.2s ease;
+            font-weight: 300;
+            font-size: 18px;
+            line-height: 1;
+        }
+        .category-accordion .cat-children { display: none; }
+        .category-accordion details[open] > .cat-children,
+        .category-accordion details[open] .cat-children { display: block; }
+        .category-accordion .category-link.active { color: var(--primary, #d4af37) !important; font-weight: 600; }
+
         /* Pure CSS Background Slider - Updated for 10 images */
         .bg-slider {
             position: absolute;
@@ -302,23 +318,26 @@ $grouped_menu = get_grouped_menu($uniqueCategories, is_admin_view());
                                                             data-sort="desc">Z-A</a>
                                                     </div>
 
-                                                    <ul id="category-list" class="reset-ul" data-localscroll="true"
+                                                    <ul id="category-list" class="reset-ul category-accordion" data-localscroll="true"
                                                         data-localscroll-options='{"itemsSelector":"> li > a", "trackWindowScroll": true, "includeParentAsOffset": true}'>
                                                         <?php foreach ($grouped_menu as $group): ?>
-                                                            <li class="mb-15 mt-25 first:mt-0">
-                                                                <h6 class="text-primary text-12 tracking-1 uppercase mb-10">
-                                                                    <?= htmlspecialchars($group['parent']); ?>
-                                                                </h6>
-                                                                <ul class="reset-ul">
-                                                                    <?php foreach ($group['children'] as $category): ?>
-                                                                        <li class="mb-10">
-                                                                            <a href="#"
-                                                                                class="category-link flex leading-1/5em hover:text-primary"
-                                                                                aria-current="page"
-                                                                                data-category="<?= htmlspecialchars($category); ?>"><?= htmlspecialchars($category); ?></a>
-                                                                        </li>
-                                                                    <?php endforeach; ?>
-                                                                </ul>
+                                                            <li class="cat-group mb-10">
+                                                                <details class="cat-group-details">
+                                                                    <summary class="cat-parent flex justify-between items-center cursor-pointer py-5 text-14 font-bold uppercase tracking-1 hover:text-primary"
+                                                                             data-parent="<?= htmlspecialchars($group['parent']); ?>">
+                                                                        <span><?= htmlspecialchars($group['parent']); ?></span>
+                                                                        <span class="cat-parent-arrow">+</span>
+                                                                    </summary>
+                                                                    <ul class="reset-ul cat-children pl-15 pt-5">
+                                                                        <?php foreach ($group['children'] as $category): ?>
+                                                                            <li class="mb-5">
+                                                                                <a href="#"
+                                                                                   class="category-link flex leading-1/5em hover:text-primary text-13"
+                                                                                   data-category="<?= htmlspecialchars($category); ?>"><?= htmlspecialchars($category); ?></a>
+                                                                            </li>
+                                                                        <?php endforeach; ?>
+                                                                    </ul>
+                                                                </details>
                                                             </li>
                                                         <?php endforeach; ?>
                                                     </ul>
@@ -745,7 +764,10 @@ if (isset($_SESSION['flash_message'])) {
         }
 
         // If not cached, fetch from server
-        fetch(`load_products.php?category=${encodeURIComponent(category)}`)
+        let url = `load_products_2.php?page=1&limit=200`;
+        if (category) url += `&category=${encodeURIComponent(category)}`;
+        
+        fetch(url)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -1035,4 +1057,100 @@ if (isset($_SESSION['flash_message'])) {
             });
         });
     }
+
+    // Accordion and Parent Filtering Logic
+    (function() {
+        'use strict';
+
+        var accordion = document.getElementById('category-list');
+        if (!accordion) return;
+
+        // 1. Accordion behavior — only one <details> open at a time
+        accordion.addEventListener('toggle', function(e) {
+            if (!e.target.matches('details.cat-group-details')) return;
+            if (e.target.open) {
+                var others = accordion.querySelectorAll('details.cat-group-details[open]');
+                others.forEach(function(d) {
+                    if (d !== e.target) d.removeAttribute('open');
+                });
+            }
+        }, true);
+
+        // 2. Parent click → trigger filter for all children of that parent
+        accordion.addEventListener('click', function(e) {
+            var summary = e.target.closest('summary.cat-parent');
+            if (!summary) return;
+
+            var parentName = summary.getAttribute('data-parent');
+            if (!parentName) return;
+
+            var details = summary.parentElement;
+            var isClosing = details.hasAttribute('open');
+
+            // Update heading
+            var headingElement = document.querySelector('.ld-fancy-heading h2');
+            if (headingElement) {
+                headingElement.textContent = isClosing ? 'All Products' : parentName;
+            }
+
+            if (isClosing) {
+                triggerFilter({ reset: true });
+            } else {
+                triggerFilter({ parent: parentName });
+            }
+        });
+
+        // 3. Hand off to the existing filter system
+        window.triggerFilter = function(opts) {
+            const productsContainer = document.querySelector('#productsContainer');
+            productsContainer.innerHTML = '<div class="loading-indicator text-center py-5"><div class="spinner-border text-primary" role="status"></div><p>Loading products...</p></div>';
+
+            let url = `load_products_2.php?page=1&limit=200`;
+            if (opts.category) url += `&category=${encodeURIComponent(opts.category)}`;
+            if (opts.parent) url += `&parent=${encodeURIComponent(opts.parent)}`;
+            if (opts.reset) url += `&parent=ALL`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    // Cache results if it's a category
+                    if (opts.category) dataCache[opts.category] = data.products;
+                    renderProducts(data.products, opts.category || opts.parent || 'All');
+                })
+                .catch(error => {
+                    console.error('Error in triggerFilter:', error);
+                    productsContainer.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                });
+        };
+
+        // 4. On page load: read URL params, expand the matching parent
+        function autoExpandFromUrl() {
+            var params = new URLSearchParams(window.location.search);
+            var activeChild = params.get('category');
+            var activeParent = params.get('parent');
+
+            if (activeParent) {
+                var summary = accordion.querySelector('summary[data-parent="' + cssEscape(activeParent) + '"]');
+                if (summary) summary.parentElement.setAttribute('open', '');
+                triggerFilter({ parent: activeParent });
+                return;
+            }
+
+            if (activeChild) {
+                var childLink = accordion.querySelector('a.category-link[data-category="' + cssEscape(activeChild) + '"]');
+                if (childLink) {
+                    childLink.classList.add('active');
+                    var details = childLink.closest('details.cat-group-details');
+                    if (details) details.setAttribute('open', '');
+                    triggerFilter({ category: activeChild });
+                }
+            }
+        }
+
+        function cssEscape(s) {
+            return s.replace(/(["\\])/g, '\\$1');
+        }
+
+        autoExpandFromUrl();
+    })();
 </script>
