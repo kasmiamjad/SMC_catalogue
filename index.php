@@ -776,15 +776,15 @@ if (isset($_SESSION['flash_message'])) {
             })
             .then(data => {
                 // Cache the data
-                dataCache[category] = data;
+                dataCache[category] = data.products;
 
                 // Update category count if not already known
                 if (categoryCounts[category] === undefined) {
-                    categoryCounts[category] = data.length;
+                    categoryCounts[category] = data.totalProducts;
                     updateCategoryCountsInMenu();
                 }
 
-                renderProducts(data, category);
+                renderProducts(data.products, category);
             })
             .catch(error => {
                 console.error('Error loading products:', error);
