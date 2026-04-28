@@ -74,13 +74,13 @@ $grouped_menu = get_grouped_menu($uniqueCategories, is_admin_view());
         .category-accordion summary {
             list-style: none;
             cursor: pointer;
-            padding: 14px 4px;
+            padding: 9px 4px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             font-size: 13px;
             font-weight: 700;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
             transition: color 0.2s ease, padding-left 0.2s ease;
             user-select: none;
@@ -103,14 +103,14 @@ $grouped_menu = get_grouped_menu($uniqueCategories, is_admin_view());
         .category-accordion .cat-parent-icon {
             display: inline-flex;
             align-items: center;
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             flex-shrink: 0;
         }
 
         .category-accordion .cat-parent-icon i {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
         }
 
         .category-accordion .cat-parent-label {
@@ -118,12 +118,12 @@ $grouped_menu = get_grouped_menu($uniqueCategories, is_admin_view());
         }
 
         .category-accordion .cat-parent-count {
-            font-size: 11px;
+            font-size: 10.5px;
             font-weight: 600;
             color: rgba(0, 0, 0, 0.4);
             letter-spacing: 0;
             background: rgba(0, 0, 0, 0.04);
-            padding: 2px 8px;
+            padding: 1px 7px;
             border-radius: 10px;
             min-width: 24px;
             text-align: center;
@@ -160,17 +160,17 @@ $grouped_menu = get_grouped_menu($uniqueCategories, is_admin_view());
             overflow: hidden;
             max-height: 0;
             transition: max-height 0.3s ease-out;
-            padding-left: 30px;
+            padding-left: 28px;
         }
 
         .category-accordion details[open] > .cat-children {
             max-height: 1000px;
-            padding-top: 4px;
-            padding-bottom: 12px;
+            padding-top: 2px;
+            padding-bottom: 8px;
         }
 
         .category-accordion .cat-children li {
-            margin-bottom: 6px;
+            margin-bottom: 2px;
         }
 
         .category-accordion .category-link,
@@ -179,8 +179,8 @@ $grouped_menu = get_grouped_menu($uniqueCategories, is_admin_view());
             align-items: center;
             justify-content: space-between;
             gap: 10px;
-            padding: 6px 8px;
-            font-size: 13px;
+            padding: 4px 8px;
+            font-size: 12.5px;
             font-weight: 400;
             text-transform: none;
             letter-spacing: 0;
@@ -204,11 +204,11 @@ $grouped_menu = get_grouped_menu($uniqueCategories, is_admin_view());
         }
 
         .category-accordion .cat-child-count {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 500;
             color: rgba(0, 0, 0, 0.35);
             background: rgba(0, 0, 0, 0.04);
-            padding: 1px 7px;
+            padding: 1px 6px;
             border-radius: 10px;
             min-width: 22px;
             text-align: center;
@@ -657,12 +657,13 @@ $grouped_menu = get_grouped_menu($uniqueCategories, is_admin_view());
 
     </div>
 
-</body>
-
-
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        lucide.createIcons();
+    });
+</script>
 <!-------------------------------------------------------- CODE ---------------------------------------------------------->
-
-</html>
 
 <script src="./assets/vendors/jquery.min.js"></script>
 <script src="./assets/vendors/jquery-ui/jquery-ui.min.js"></script>
@@ -751,10 +752,10 @@ if (isset($_SESSION['flash_message'])) {
             })
             .then(data => {
                 // Store category counts
-                Object.assign(categoryCounts, data);
+                Object.assign(categoryCounts, data.children || {});
 
                 // Calculate total product count
-                totalProductCount = Object.values(data).reduce((sum, count) => sum + count, 0);
+                totalProductCount = data.total || 0;
 
                 // Update the total counter in the About Us section
                 updateTotalProductCounter(totalProductCount);
@@ -1279,13 +1280,6 @@ if (isset($_SESSION['flash_message'])) {
 
         autoExpandFromUrl();
     })();
-</script>
-
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        lucide.createIcons();
-    });
 </script>
 
 </body>

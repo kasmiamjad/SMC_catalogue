@@ -20,10 +20,13 @@ if ($data === null || !isset($data['result']['payload']['product_stock_details']
 
 $childCounts = [];   // exact category name => count
 $parentCounts = [];  // parent name => sum of children counts
+$total = 0;
 
 foreach ($data['result']['payload']['product_stock_details'] as $product) {
     $cat = $product['product_category'] ?? null;
     if (!$cat) continue;
+
+    $total++;
 
     if (!isset($childCounts[$cat])) $childCounts[$cat] = 0;
     $childCounts[$cat]++;
@@ -38,4 +41,5 @@ foreach ($data['result']['payload']['product_stock_details'] as $product) {
 echo json_encode([
     'children' => $childCounts,
     'parents'  => $parentCounts,
+    'total'    => $total
 ]);
