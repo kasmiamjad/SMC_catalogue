@@ -1,0 +1,18 @@
+# macOS junk
+.DS_Store
+__MACOSX/
+._*
+
+# Editor junk
+.vscode/
+.idea/
+*.swp
+*~
+
+# Logs and reports
+*.log
+parent_category_migration_report.txt
+
+# Note: data.json is INTENTIONALLY committed for now.
+# It's a runtime cache from Odoo, but committing it makes the 
+# project reproducible across machines during development.
