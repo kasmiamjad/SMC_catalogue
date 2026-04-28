@@ -122,3 +122,26 @@ function get_grouped_menu(array $all_unique_categories, bool $is_admin = false):
 function is_admin_view(): bool {
     return false;
 }
+
+/**
+ * Maps parent categories to Lucide icon names.
+ */
+function get_parent_icon(string $parent_name): string {
+    static $icons = [
+        'ALL'                                     => 'layout-grid',
+        'Promotional Goods'                       => 'shirt',
+        'Private Storage'                         => 'warehouse',
+        'Technical'                               => 'wrench',
+        'OS&E - Operating Supplies & Equipment'   => 'package',
+        'FORMULA E'                               => 'flag',
+        'CWW - Cleaning, Waste & Washrooms'       => 'spray-can',
+        'FF&E - Furniture, Fixtures & Equipment'  => 'sofa',
+        'IT'                                      => 'monitor',
+        'KITCHEN EQUIPMENT'                       => 'utensils',
+        'MICROMOBILITY'                           => 'bike',
+        'SPORTING'                                => 'trophy',
+        'Production elements'                     => 'clapperboard',
+        'FIRE AND SAFETY'                         => 'shield-alert',
+    ];
+    return $icons[$parent_name] ?? 'tag';   // 'tag' as fallback
+}

@@ -50,6 +50,173 @@ if (file_exists($jsonFilePath)) {
 		<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&display=swap" rel="stylesheet">
 
 		<title>Saudi Motosport - Product Catalog </title>
+		<style>
+        /* Accordion Menu Styles */
+        .category-accordion {
+            padding: 0;
+        }
+
+        .category-accordion .cat-group {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .category-accordion .cat-group:last-child {
+            border-bottom: none;
+        }
+
+        .category-accordion summary {
+            list-style: none;
+            cursor: pointer;
+            padding: 14px 4px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: color 0.2s ease, padding-left 0.2s ease;
+            user-select: none;
+        }
+
+        .category-accordion summary::-webkit-details-marker { display: none; }
+
+        .category-accordion summary:hover {
+            color: var(--primary, #d4af37);
+            padding-left: 8px;
+        }
+
+        .category-accordion details[open] > summary {
+            color: var(--primary, #d4af37);
+            border-left: 3px solid var(--primary, #d4af37);
+            padding-left: 8px;
+            margin-left: -11px;
+        }
+
+        .category-accordion .cat-parent-icon {
+            display: inline-flex;
+            align-items: center;
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+
+        .category-accordion .cat-parent-icon i {
+            width: 18px;
+            height: 18px;
+        }
+
+        .category-accordion .cat-parent-label {
+            flex: 1;
+        }
+
+        .category-accordion .cat-parent-count {
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(0, 0, 0, 0.4);
+            letter-spacing: 0;
+            background: rgba(0, 0, 0, 0.04);
+            padding: 2px 8px;
+            border-radius: 10px;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        .category-accordion .cat-parent-count:empty {
+            display: none;
+        }
+
+        .category-accordion details[open] > summary .cat-parent-count {
+            background: var(--primary, #d4af37);
+            color: white;
+        }
+
+        .category-accordion .cat-parent-arrow {
+            display: inline-flex;
+            align-items: center;
+            transition: transform 0.25s ease;
+            color: rgba(0, 0, 0, 0.3);
+        }
+
+        .category-accordion .cat-parent-arrow i {
+            width: 16px;
+            height: 16px;
+        }
+
+        .category-accordion details[open] > summary .cat-parent-arrow {
+            transform: rotate(90deg);
+            color: var(--primary, #d4af37);
+        }
+
+        /* Children — animated reveal */
+        .category-accordion .cat-children {
+            overflow: hidden;
+            max-height: 0;
+            transition: max-height 0.3s ease-out;
+            padding-left: 30px;
+        }
+
+        .category-accordion details[open] > .cat-children {
+            max-height: 1000px;
+            padding-top: 4px;
+            padding-bottom: 12px;
+        }
+
+        .category-accordion .cat-children li {
+            margin-bottom: 6px;
+        }
+
+        .category-accordion .category-link,
+        .category-accordion .cat-children a {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 6px 8px;
+            font-size: 13px;
+            font-weight: 400;
+            text-transform: none;
+            letter-spacing: 0;
+            color: rgba(0, 0, 0, 0.7);
+            border-radius: 4px;
+            transition: background 0.15s ease, color 0.15s ease, padding-left 0.15s ease;
+            text-decoration: none;
+        }
+
+        .category-accordion .category-link:hover,
+        .category-accordion .cat-children a:hover {
+            color: var(--primary, #d4af37);
+            background: rgba(0, 0, 0, 0.025);
+            padding-left: 12px;
+        }
+
+        .category-accordion .category-link.active {
+            color: var(--primary, #d4af37);
+            background: rgba(212, 175, 55, 0.08);
+            font-weight: 600;
+        }
+
+        .category-accordion .cat-child-count {
+            font-size: 11px;
+            font-weight: 500;
+            color: rgba(0, 0, 0, 0.35);
+            background: rgba(0, 0, 0, 0.04);
+            padding: 1px 7px;
+            border-radius: 10px;
+            min-width: 22px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .category-accordion .cat-child-count:empty {
+            display: none;
+        }
+
+        .category-accordion .category-link.active .cat-child-count {
+            background: var(--primary, #d4af37);
+            color: white;
+        }
+    </style>
 	</head>
 
 	<body style="background-color: #032824; background-image: url(https://saudimotorsport.com/static/pattern-bg-138686d69440bf998f880b4ef82ec35f.svg);" class="lqd-cc-outer-hidden" data-lqd-cc="true" data-mobile-nav-breakpoint="1199" data-mobile-nav-style="modern" data-mobile-nav-scheme="dark" data-mobile-nav-trigger-alignment="right" data-mobile-header-scheme="gray" data-mobile-logo-alignment="default" data-overlay-onmobile="false">
@@ -119,19 +286,30 @@ if (file_exists($jsonFilePath)) {
 											<div class="w-full flex flex-auto flex-col items-start justify-center px-15">
 												<div class="header-module no-rotate">
 													<div class="lqd-fancy-menu lqd-custom-menu lqd-menu-td-none">
-														<ul class="reset-ul category-accordion" data-localscroll="true" data-localscroll-options='{"itemsSelector":"> li > a", "trackWindowScroll": true, "includeParentAsOffset": true}'>
+														<ul id="category-list" class="reset-ul category-accordion" data-localscroll="true"
+                                                            data-localscroll-options='{"itemsSelector":"> li > a", "trackWindowScroll": true, "includeParentAsOffset": true}'>
 															<?php foreach ($grouped_menu as $group): ?>
-																<li class="cat-group mb-10">
+																<li class="cat-group">
 																	<details class="cat-group-details">
-																		<summary class="cat-parent flex justify-between items-center cursor-pointer py-5 text-14 font-bold uppercase tracking-1 hover:text-primary"
-																				 data-parent="<?= htmlspecialchars($group['parent']); ?>">
-																			<span><?= htmlspecialchars($group['parent']); ?></span>
-																			<span class="cat-parent-arrow">+</span>
+																		<summary class="cat-parent" data-parent="<?= htmlspecialchars($group['parent']); ?>">
+                                                                            <span class="cat-parent-icon">
+                                                                                <i data-lucide="<?= htmlspecialchars(get_parent_icon($group['parent'])); ?>"></i>
+                                                                            </span>
+                                                                            <span class="cat-parent-label"><?= htmlspecialchars($group['parent']); ?></span>
+                                                                            <span class="cat-parent-count" data-parent-count="<?= htmlspecialchars($group['parent']); ?>"></span>
+                                                                            <span class="cat-parent-arrow">
+                                                                                <i data-lucide="chevron-right"></i>
+                                                                            </span>
 																		</summary>
-																		<ul class="reset-ul cat-children pl-15 pt-5">
+																		<ul class="reset-ul cat-children">
 																			<?php foreach ($group['children'] as $category): ?>
-																				<li class="mb-5">
-																					<a class="flex leading-1/5em hover:text-primary text-13" href="#banner" aria-current="page"><?= htmlspecialchars($category); ?></a>
+																				<li>
+																					<a href="#banner"
+                                                                                       class="category-link"
+                                                                                       data-category="<?= htmlspecialchars($category); ?>">
+                                                                                        <span class="cat-child-label"><?= htmlspecialchars($category); ?></span>
+                                                                                        <span class="cat-child-count" data-child-count="<?= htmlspecialchars($category); ?>"></span>
+                                                                                    </a>
 																				</li>
 																			<?php endforeach; ?>
 																		</ul>
@@ -490,6 +668,31 @@ if (file_exists($jsonFilePath)) {
 				<button class="lity-close" type="button" aria-label="Close (Press escape to close)" data-lity-close>&times;</button>
 			</div>
 		</div>
+        <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                lucide.createIcons();
+
+                function cssEscape(s) {
+                    return s.replace(/(["\\])/g, '\\$1');
+                }
+
+                // Populate count badges
+                fetch('get_category_counts.php')
+                    .then(function(r) { return r.json(); })
+                    .then(function(counts) {
+                        if (counts.error) return;
+                        Object.keys(counts.parents || {}).forEach(function(parent) {
+                            var el = document.querySelector('[data-parent-count="' + cssEscape(parent) + '"]');
+                            if (el) el.textContent = counts.parents[parent];
+                        });
+                        Object.keys(counts.children || {}).forEach(function(child) {
+                            var el = document.querySelector('[data-child-count="' + cssEscape(child) + '"]');
+                            if (el) el.textContent = counts.children[child];
+                        });
+                    });
+            });
+        </script>
 	</body>
 
 </html>

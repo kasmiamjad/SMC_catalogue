@@ -1,29 +1,41 @@
 <?php
-// Set header to JSON
 header('Content-Type: application/json');
 
-// Assuming your JSON data is in 'data.json'
-$jsonFilePath = 'data.json';
-$categoryCounts = [];
+require_once __DIR__ . '/lib/category_helper.php';
 
-if (file_exists($jsonFilePath)) {
-    $jsonContent = file_get_contents($jsonFilePath);
-    $data = json_decode($jsonContent, true);
+$jsonFilePath = __DIR__ . '/data.json';
 
-    if ($data !== null && isset($data['result']['payload']['product_stock_details'])) {
-        // Count products by category
-        foreach ($data['result']['payload']['product_stock_details'] as $product) {
-            $category = $product['product_category'];
-            
-            if (!isset($categoryCounts[$category])) {
-                $categoryCounts[$category] = 0;
-            }
-            
-            $categoryCounts[$category]++;
-        }
+if (!file_exists($jsonFilePath)) {
+    http_response_code(500);
+    echo json_encode(['error' => 'data unavailable']);
+    exit;
+}
+
+$data = json_decode(file_get_contents($jsonFilePath), true);
+if ($data === null || !isset($data['result']['payload']['product_stock_details'])) {
+    http_response_code(500);
+    echo json_encode(['error' => 'data malformed']);
+    exit;
+}
+
+$childCounts = [];   // exact category name => count
+$parentCounts = [];  // parent name => sum of children counts
+
+foreach ($data['result']['payload']['product_stock_details'] as $product) {
+    $cat = $product['product_category'] ?? null;
+    if (!$cat) continue;
+
+    if (!isset($childCounts[$cat])) $childCounts[$cat] = 0;
+    $childCounts[$cat]++;
+
+    $parent = get_parent_for($cat);
+    if ($parent) {
+        if (!isset($parentCounts[$parent])) $parentCounts[$parent] = 0;
+        $parentCounts[$parent]++;
     }
 }
 
-// Return the counts as JSON
-echo json_encode($categoryCounts);
-?>
+echo json_encode([
+    'children' => $childCounts,
+    'parents'  => $parentCounts,
+]);
