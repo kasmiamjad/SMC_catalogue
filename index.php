@@ -224,6 +224,11 @@ $grouped_menu = get_grouped_menu($uniqueCategories, is_admin_view());
             color: white;
         }
 
+        .sort-btn.active {
+            color: var(--primary, #d4af37) !important;
+            font-weight: 700;
+        }
+
         /* Pure CSS Background Slider - Updated for 10 images */
         .bg-slider {
             position: absolute;
@@ -1131,37 +1136,75 @@ if (isset($_SESSION['flash_message'])) {
     });
 
     // Sorting Logic
+    function sortMenu(direction) {  // 'asc' or 'desc'
+        var pinned = ['ALL', 'FF&E - Furniture, Fixtures & Equipment', 'OS&E - Operating Supplies & Equipment'];
+        var list = document.getElementById('category-list');
+        if (!list) return;
+        
+        var groups = Array.from(list.querySelectorAll(':scope > li.cat-group'));
+        
+        // Separate pinned from sortable
+        var pinnedGroups = [];
+        var sortableGroups = [];
+        groups.forEach(function(g) {
+            var summary = g.querySelector('summary');
+            if (!summary) return;
+            var name = summary.getAttribute('data-parent');
+            var pinIdx = pinned.indexOf(name);
+            if (pinIdx >= 0) pinnedGroups[pinIdx] = g;
+            else sortableGroups.push(g);
+        });
+        pinnedGroups = pinnedGroups.filter(Boolean);  // drop holes
+        
+        // Sort the non-pinned ones
+        sortableGroups.sort(function(a, b) {
+            var aSum = a.querySelector('summary');
+            var bSum = b.querySelector('summary');
+            if (!aSum || !bSum) return 0;
+            var aName = aSum.getAttribute('data-parent').toLowerCase();
+            var bName = bSum.getAttribute('data-parent').toLowerCase();
+            if (direction === 'asc') return aName.localeCompare(bName);
+            return bName.localeCompare(aName);
+        });
+        
+        // Re-append in correct order: pinned first, then sortable
+        pinnedGroups.concat(sortableGroups).forEach(function(g) {
+            list.appendChild(g);
+        });
+        
+        // Sort children inside each group
+        list.querySelectorAll('ul.cat-children').forEach(function(ul) {
+            var items = Array.from(ul.querySelectorAll(':scope > li'));
+            items.sort(function(a, b) {
+                var aLink = a.querySelector('a');
+                var bLink = b.querySelector('a');
+                if (!aLink || !bLink) return 0;
+                var aName = aLink.getAttribute('data-category').toLowerCase();
+                var bName = bLink.getAttribute('data-category').toLowerCase();
+                if (direction === 'asc') return aName.localeCompare(bName);
+                return bName.localeCompare(aName);
+            });
+            items.forEach(function(item) { ul.appendChild(item); });
+        });
+    }
+
     const sortBtns = document.querySelectorAll('.sort-btn');
-    const categoryList = document.getElementById('category-list');
-    
-    if (categoryList && sortBtns.length > 0) {
+    if (sortBtns.length > 0) {
         sortBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            btn.addEventListener('click', function(e) {
                 e.preventDefault();
-                const sortType = btn.getAttribute('data-sort');
-                const items = Array.from(categoryList.children);
+                const direction = this.getAttribute('data-sort');
+                sortMenu(direction);
                 
-                items.sort((a, b) => {
-                    const linkA = a.querySelector('.category-link');
-                    const linkB = b.querySelector('.category-link');
-                    
-                    if (!linkA || !linkB) return 0;
-                    
-                    const textA = linkA.innerText.trim().toUpperCase();
-                    const textB = linkB.innerText.trim().toUpperCase();
-                    
-                    if (sortType === 'asc') {
-                        return textA.localeCompare(textB);
-                    } else {
-                        return textB.localeCompare(textA);
-                    }
-                });
-                
-                // Clear and re-append sorted items
-                categoryList.innerHTML = '';
-                items.forEach(item => categoryList.appendChild(item));
+                // Toggle active class
+                sortBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
             });
         });
+        
+        // Set A-Z active by default on load
+        const ascBtn = document.querySelector('[data-sort="asc"]');
+        if (ascBtn) ascBtn.classList.add('active');
     }
 
     // Accordion and Parent Filtering Logic

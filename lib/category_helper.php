@@ -75,36 +75,76 @@ function get_children_of(string $parent_name, array $all_unique_categories): arr
 }
 
 /**
+ * Get the list of pinned parents that must always stay at the top.
+ */
+function get_pinned_parents(): array {
+    return [
+        'ALL',
+        'FF&E - Furniture, Fixtures & Equipment',
+        'OS&E - Operating Supplies & Equipment',
+    ];
+}
+
+/**
  * Get the grouped menu structure.
  */
 function get_grouped_menu(array $all_unique_categories, bool $is_admin = false): array {
-    $menu = [];
-    $parents = get_parents();
-    $mapped_children = [];
+    $all_parents = get_parents();
+    $pinned_names = get_pinned_parents();
     
-    foreach ($parents as $parent) {
+    // 1. Identify which parents actually have children present in this data set
+    $active_groups = [];
+    $mapped_children_names = [];
+    
+    foreach ($all_parents as $parent) {
         $children = get_children_of($parent, $all_unique_categories);
         if (!empty($children)) {
-            $menu[] = [
+            // Sort children A-Z (case-insensitive)
+            usort($children, 'strcasecmp');
+            
+            $active_groups[$parent] = [
                 'parent' => $parent,
                 'children' => $children
             ];
-            // Keep track of which categories were mapped
             foreach ($children as $child) {
-                $mapped_children[] = normalize_category_name($child);
+                $mapped_children_names[] = normalize_category_name($child);
             }
         }
     }
     
+    // 2. Separate into pinned and non-pinned
+    $pinned_menu = [];
+    
+    // Process pinned first (in the order of get_pinned_parents)
+    foreach ($pinned_names as $p_name) {
+        if (isset($active_groups[$p_name])) {
+            $pinned_menu[] = $active_groups[$p_name];
+            unset($active_groups[$p_name]);
+        }
+    }
+    
+    // Remaining active groups are non-pinned
+    $non_pinned_names = array_keys($active_groups);
+    natcasesort($non_pinned_names); // Alphabetical A-Z
+    
+    $sorted_non_pinned = [];
+    foreach ($non_pinned_names as $p_name) {
+        $sorted_non_pinned[] = $active_groups[$p_name];
+    }
+    
+    // 3. Assemble final menu
+    $menu = array_merge($pinned_menu, $sorted_non_pinned);
+    
+    // 4. Handle Unassigned for admins
     if ($is_admin) {
         $unmapped = [];
         foreach ($all_unique_categories as $category) {
-            if (!in_array(normalize_category_name($category), $mapped_children)) {
+            if (!in_array(normalize_category_name($category), $mapped_children_names)) {
                 $unmapped[] = $category;
             }
         }
-        
         if (!empty($unmapped)) {
+            usort($unmapped, 'strcasecmp');
             $menu[] = [
                 'parent' => 'Unassigned',
                 'children' => $unmapped
