@@ -7,7 +7,7 @@ require_once __DIR__ . '/lib/category_helper.php';
 
 $jsonFilePath = 'data.json';
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 200; // Default to a large batch for smooth browsing
+$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10000; // Increase limit to ensure all items in a group load
 $start = ($page - 1) * $limit;
 
 $requestedCategory = isset($_GET['category']) ? $_GET['category'] : '';
@@ -36,23 +36,19 @@ if (file_exists($jsonFilePath)) {
                     $filteredProducts[] = $product;
                 }
             }
-        } elseif ($requestedParent) {
+        } elseif ($requestedParent && $requestedParent !== 'ALL') {
             // Priority 2: Parent group filter
-            if ($requestedParent === 'ALL') {
-                $filteredProducts = $allProducts;
-            } else {
-                // Get all unique categories in the data for lookup
-                $uniqueCategories = array_unique(array_column($allProducts, 'product_category'));
-                $children = get_children_of($requestedParent, $uniqueCategories);
-                
-                foreach ($allProducts as $product) {
-                    if (in_array($product['product_category'], $children)) {
-                        $filteredProducts[] = $product;
-                    }
+            // Get all unique categories in the data for lookup
+            $uniqueCategories = array_unique(array_column($allProducts, 'product_category'));
+            $children = get_children_of($requestedParent, $uniqueCategories);
+            
+            foreach ($allProducts as $product) {
+                if (in_array($product['product_category'], $children)) {
+                    $filteredProducts[] = $product;
                 }
             }
         } else {
-            // Priority 3: No filter -> return all
+            // Priority 3: No filter OR explicit ALL -> return everything
             $filteredProducts = $allProducts;
         }
 

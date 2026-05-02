@@ -700,6 +700,9 @@ if (isset($_SESSION['flash_message'])) {
     const dataCache = {};
     const categoryCounts = {};
     let totalProductCount = 0;
+    let currentRenderSession = 0; // Guard for chunked rendering
+    let currentProducts = []; // The full list of products currently "in view"
+    let currentCategoryName = 'All';
 
     document.addEventListener("DOMContentLoaded", function () {
         // Fetch all category counts on initial page load
@@ -709,6 +712,10 @@ if (isset($_SESSION['flash_message'])) {
             item.addEventListener('click', function (e) {
                 e.preventDefault();
                 var selectedCategory = this.getAttribute('data-category');
+
+                // Remove active class from all links
+                document.querySelectorAll('.category-link').forEach(link => link.classList.remove('active'));
+                this.classList.add('active');
 
                 // Update the heading dynamically based on the selected category
                 var headingElement = document.querySelector('.ld-fancy-heading h2');
@@ -875,7 +882,7 @@ if (isset($_SESSION['flash_message'])) {
         }
 
         // If not cached, fetch from server
-        let url = `load_products_2.php?page=1&limit=200`;
+        let url = `load_products_2.php?page=1&limit=10000`;
         if (category) url += `&category=${encodeURIComponent(category)}`;
         
         fetch(url)
@@ -904,30 +911,63 @@ if (isset($_SESSION['flash_message'])) {
     }
 
     // Separate rendering function to process cached or fetched data
-    function renderProducts(products, category) {
+    function renderProducts(products, category, isSearchResult = false) {
+        if (!isSearchResult) {
+            currentProducts = products;
+            currentCategoryName = category;
+            
+            // Clear search input when switching categories
+            const searchInput = document.getElementById('productSearch');
+            if (searchInput) searchInput.value = '';
+        }
+        // Start a new rendering session
+        const session = ++currentRenderSession;
+        
         const productsContainer = document.querySelector('#productsContainer');
         productsContainer.innerHTML = ''; // Clear current products
 
         // Add category information at the top
         const categoryInfoHTML = `
-                    <div class="col-12 mb-4">
-                       
-                        <hr>
+                    <div class="col-12 mb-4 mt-20">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h4 class="m-0" style="color: #032824; font-weight: 700;">
+                                ${isSearchResult ? `Results in ${currentCategoryName}` : (category === 'All' ? 'Full Catalogue' : category)} 
+                                <span class="badge bg-primary text-white ms-2" style="font-size: 14px; background: #d4af37 !important; border-radius: 20px; padding: 5px 15px;">
+                                    ${products.length.toLocaleString()} Products ${isSearchResult ? 'Found' : ''}
+                                </span>
+                            </h4>
+                        </div>
+                        <hr class="mt-15 mb-15">
                     </div>
                 `;
         productsContainer.innerHTML = categoryInfoHTML;
 
         // If we have a large dataset, use chunked rendering
         if (products.length > 50) {
-            renderProductsInChunks(products, 0);
-        } else {
+            renderProductsInChunks(products, 0, session);
+        } else if (products.length > 0) {
             // For smaller datasets, render all at once
             renderProductBatch(products, productsContainer);
+        } else {
+            // No products found
+            productsContainer.innerHTML += `
+                <div class="col-12 text-center py-5">
+                    <div class="mb-4">
+                        <i class="lucide-search text-muted" style="width: 48px; height: 48px;"></i>
+                    </div>
+                    <h5 class="text-muted">No products found matching your criteria.</h5>
+                    <p class="text-muted">Try adjusting your search terms or selecting a different category.</p>
+                </div>
+            `;
+            addFooter(productsContainer);
         }
     }
 
     // Render products in smaller batches to prevent UI freezing
-    function renderProductsInChunks(products, startIndex) {
+    function renderProductsInChunks(products, startIndex, session) {
+        // If a new session has started, stop this rendering task
+        if (session !== currentRenderSession) return;
+
         const productsContainer = document.querySelector('#productsContainer');
         const chunkSize = 20; // Number of products to render at once
         const endIndex = Math.min(startIndex + chunkSize, products.length);
@@ -949,8 +989,9 @@ if (isset($_SESSION['flash_message'])) {
             window.requestAnimationFrame(() => {
                 setTimeout(() => {
                     // Remove the loading indicator before loading next batch
+                    if (session !== currentRenderSession) return;
                     document.getElementById('loading-more')?.remove();
-                    renderProductsInChunks(products, endIndex);
+                    renderProductsInChunks(products, endIndex, session);
                 }, 100);
             });
         } else {
@@ -1022,48 +1063,34 @@ if (isset($_SESSION['flash_message'])) {
         container.innerHTML += footerHTML;
     }
 
+    let searchTimeout;
     // Search products function
     function searchProducts() {
-        let input = document.getElementById('productSearch');
-        let filter = input.value.toUpperCase();
-        let productsContainer = document.getElementById('productsContainer');
-        let products = productsContainer.getElementsByClassName('lqd-pf-column');
-
-        let matchCount = 0;
-
-        for (let i = 0; i < products.length; i++) {
-            // Access the elements for title, reference, description, and quantity
-            let title = products[i].querySelector(".lqd-pf-title");
-            let ref = products[i].querySelector(".ref_product");
-            let description = products[i].querySelector(".description_product");
-            let quantity = products[i].querySelector(".quantity_product");
-
-            // Combine text values from all these elements
-            let textValues = [title, ref, description, quantity]
-                .filter(element => element)
-                .map(element => element.textContent || element.innerText)
-                .join(" ");
-
-            // Check if the combined text values contain the search filter
-            if (textValues.toUpperCase().indexOf(filter) > -1) {
-                products[i].style.display = "";
-                matchCount++;
-            } else {
-                products[i].style.display = "none";
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            let input = document.getElementById('productSearch');
+            let filter = input.value.toLowerCase().trim();
+            
+            if (!filter) {
+                // If search is cleared, restore original products
+                renderProducts(currentProducts, currentCategoryName, true);
+                return;
             }
-        }
 
-        // Update the count badge to show filtered count
-        const countBadge = document.querySelector('.product-count-badge');
-        if (countBadge && filter) {
-            countBadge.textContent = `${matchCount} Products (filtered)`;
-        } else if (countBadge) {
-            // Restore original count
-            const category = document.querySelector('.ld-fancy-heading h2')?.textContent.split(' (')[0];
-            if (category && categoryCounts[category]) {
-                countBadge.textContent = `${categoryCounts[category]} Products`;
-            }
-        }
+            // Split filter into individual terms for multi-word search
+            const terms = filter.split(/\s+/).filter(t => t.length > 0);
+
+            // Filter the current data set
+            const filtered = currentProducts.filter(product => {
+                const searchableText = `${product.name || ''} ${product.internal_reference || ''} ${product.description || ''}`.toLowerCase();
+                
+                // Every term must be found in the searchable text (AND logic)
+                return terms.every(term => searchableText.includes(term));
+            });
+
+            // Re-render only the matching products
+            renderProducts(filtered, currentCategoryName, true);
+        }, 300);
     }
 
     // Equalize product item heights
@@ -1233,16 +1260,22 @@ if (isset($_SESSION['flash_message'])) {
             var parentName = summary.getAttribute('data-parent');
             if (!parentName) return;
 
-            var details = summary.parentElement;
-            var isClosing = details.hasAttribute('open');
+            // Ensure search bar exists when clicking a parent
+            createSearchBar();
 
             // Update heading
             var headingElement = document.querySelector('.ld-fancy-heading h2');
             if (headingElement) {
-                headingElement.textContent = isClosing ? 'All Products' : parentName;
+                if (parentName === 'ALL') {
+                    headingElement.textContent = 'All Products';
+                } else {
+                    headingElement.textContent = parentName;
+                }
             }
 
-            if (isClosing) {
+            // If ALL is clicked, load everything. 
+            // Otherwise, load products for the specific parent clicked.
+            if (parentName === 'ALL') {
                 triggerFilter({ reset: true });
             } else {
                 triggerFilter({ parent: parentName });
@@ -1254,7 +1287,7 @@ if (isset($_SESSION['flash_message'])) {
             const productsContainer = document.querySelector('#productsContainer');
             productsContainer.innerHTML = '<div class="loading-indicator text-center py-5"><div class="spinner-border text-primary" role="status"></div><p>Loading products...</p></div>';
 
-            let url = `load_products_2.php?page=1&limit=200`;
+            let url = `load_products_2.php?page=1&limit=10000`;
             if (opts.category) url += `&category=${encodeURIComponent(opts.category)}`;
             if (opts.parent) url += `&parent=${encodeURIComponent(opts.parent)}`;
             if (opts.reset) url += `&parent=ALL`;

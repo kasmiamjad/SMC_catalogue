@@ -38,6 +38,9 @@ foreach ($data['result']['payload']['product_stock_details'] as $product) {
     }
 }
 
+// Ensure "ALL" parent reflects the true total of all items in catalogue
+$parentCounts['ALL'] = $total;
+
 echo json_encode([
     'children' => $childCounts,
     'parents'  => $parentCounts,
