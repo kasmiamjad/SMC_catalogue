@@ -10,13 +10,17 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
 // Assuming your JSON data is in 'data.json'
 $jsonFilePath = 'data.json';
 $uniqueCategories = [];
+$totalStockUnits = 0;
+
+require_once __DIR__ . '/lib/category_helper.php';
 
 if (file_exists($jsonFilePath)) {
     $jsonContent = file_get_contents($jsonFilePath);
     $data = json_decode($jsonContent, true);
 
     if ($data !== null && isset($data['result']['payload']['product_stock_details'])) {
-        foreach ($data['result']['payload']['product_stock_details'] as $product) {
+        foreach (filter_visible_products($data['result']['payload']['product_stock_details']) as $product) {
+            $totalStockUnits += (float)($product['stock_quantity'] ?? 0);
             $category = $product['product_category'];
             if (!in_array($category, $uniqueCategories)) {
                 $uniqueCategories[] = $category;
@@ -25,7 +29,6 @@ if (file_exists($jsonFilePath)) {
     }
 }
 
-require_once __DIR__ . '/lib/category_helper.php';
 $grouped_menu = get_grouped_menu($uniqueCategories, is_admin_view());
 ?>
 <!DOCTYPE html>
@@ -611,7 +614,7 @@ $grouped_menu = get_grouped_menu($uniqueCategories, is_admin_view());
                                                                 class="lqd-counter lqd-counter-default pl-30 mb-0 text-black text-end sm:text-start">
                                                                 <div class="lqd-counter-element relative mb-0 text-120 leading-0/5em font-bold"
                                                                     data-enable-counter="true"
-                                                                    data-counter-options='{"targetNumber":"129,269"}'>
+                                                                    data-counter-options='{"targetNumber":"<?= number_format($totalStockUnits); ?>"}'>
                                                                     <span>9</span>
                                                                 </div>
                                                             </div>
@@ -625,7 +628,7 @@ $grouped_menu = get_grouped_menu($uniqueCategories, is_admin_view());
                                                                 class="lqd-counter lqd-counter-default mb-0 text-black text-end sm:text-start">
                                                                 <div class="lqd-counter-element relative mb-0 text-120 leading-0/5em font-bold"
                                                                     data-enable-counter="true"
-                                                                    data-counter-options='{"targetNumber":"39"}'>
+                                                                    data-counter-options='{"targetNumber":"<?= count($uniqueCategories); ?>"}'>
                                                                     <span>9</span>
                                                                 </div>
                                                             </div>

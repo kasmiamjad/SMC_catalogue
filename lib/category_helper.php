@@ -45,7 +45,30 @@ function get_parents(): array {
 }
 
 /**
+ * Whether a category is hidden from the catalogue (config 'hidden' list).
+ */
+function is_hidden_category(string $name): bool {
+    static $hidden = null;
+    if ($hidden === null) {
+        $config = load_category_config();
+        $hidden = array_map('normalize_category_name', $config['hidden'] ?? []);
+    }
+    return in_array(normalize_category_name($name), $hidden, true);
+}
+
+/**
+ * Drop products whose category is hidden.
+ */
+function filter_visible_products(array $products): array {
+    return array_values(array_filter($products, function ($p) {
+        return !is_hidden_category($p['product_category'] ?? '');
+    }));
+}
+
+/**
  * Get the parent category for a given child name.
+ * Unmapped (e.g. newly added or renamed in Odoo) names fall back to "Other"
+ * so they never silently disappear from the menu.
  */
 function get_parent_for(string $child_name): ?string {
     static $lookup_table = null;
@@ -58,7 +81,8 @@ function get_parent_for(string $child_name): ?string {
     }
     
     $normalized_input = normalize_category_name($child_name);
-    return $lookup_table[$normalized_input] ?? null;
+    if ($normalized_input === '' || is_hidden_category($child_name)) return null;
+    return $lookup_table[$normalized_input] ?? 'Other';
 }
 
 /**
@@ -123,15 +147,22 @@ function get_grouped_menu(array $all_unique_categories, bool $is_admin = false):
         }
     }
     
+    // "Other" is kept out of the A-Z sort so it always renders last
+    $other_group = $active_groups['Other'] ?? null;
+    unset($active_groups['Other']);
+
     // Remaining active groups are non-pinned
     $non_pinned_names = array_keys($active_groups);
     natcasesort($non_pinned_names); // Alphabetical A-Z
-    
+
     $sorted_non_pinned = [];
     foreach ($non_pinned_names as $p_name) {
         $sorted_non_pinned[] = $active_groups[$p_name];
     }
-    
+    if ($other_group) {
+        $sorted_non_pinned[] = $other_group;
+    }
+
     // 3. Assemble final menu
     $menu = array_merge($pinned_menu, $sorted_non_pinned);
     
@@ -157,7 +188,7 @@ function get_grouped_menu(array $all_unique_categories, bool $is_admin = false):
 
 /**
  * Check if the current view should be an admin view.
- * TODO: wire to real auth when available. Hardcoded false means SHOW CAR and other unmapped items are hidden from menu.
+ * TODO: wire to real auth when available. Unmapped items now show under "Other" for everyone.
  */
 function is_admin_view(): bool {
     return false;
@@ -182,6 +213,7 @@ function get_parent_icon(string $parent_name): string {
         'SPORTING'                                => 'trophy',
         'Production elements'                     => 'clapperboard',
         'FIRE AND SAFETY'                         => 'shield-alert',
+        'Other'                                   => 'folder',
     ];
     return $icons[$parent_name] ?? 'tag';   // 'tag' as fallback
 }

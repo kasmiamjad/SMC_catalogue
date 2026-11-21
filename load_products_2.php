@@ -25,7 +25,7 @@ if (file_exists($jsonFilePath)) {
     $data = json_decode($jsonContent, true);
 
     if (isset($data['result']['payload']['product_stock_details'])) {
-        $allProducts = $data['result']['payload']['product_stock_details'];
+        $allProducts = filter_visible_products($data['result']['payload']['product_stock_details']);
         $filteredProducts = [];
 
         // 1. Filtering logic

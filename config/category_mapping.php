@@ -31,6 +31,13 @@ return [
         'SPORTING',
         'Production elements',
         'FIRE AND SAFETY',
+        'Other',   // catch-all for categories not mapped below; always rendered last
+    ],
+
+    // Categories hidden from the catalogue entirely (menu, counts, product
+    // lists). Matched after normalization, like the mappings below.
+    'hidden' => [
+        'All / Saleable / PoS',   // POS-only items (Discount, Tips)
     ],
 
     // Child → parent mappings.
@@ -55,6 +62,8 @@ return [
         'SAFF'                               => 'Private Storage',
         'SSC'                                => 'Private Storage',
         'STF'                                => 'Private Storage',
+        'SAMF'                               => 'Private Storage',
+        'RUH'                                => 'Private Storage',
 
         // Technical
         'TECHNICAL'                          => 'Technical',
@@ -63,6 +72,11 @@ return [
         'TECHNICAL / TV SCREEN'              => 'Technical',
         'TECHNICAL / VMR'                    => 'Technical',
         'IT / SKIDATA'                       => 'Technical',
+        // Odoo dropped the "TECHNICAL / " / "IT / " prefixes (Nov 2026)
+        'ICAD'                               => 'Technical',
+        'MUSCO'                              => 'Technical',
+        'TV SCREEN'                          => 'Technical',
+        'SKIDATA'                            => 'Technical',
 
         // OS&E
         'CONSUMABLE'                         => 'OS&E - Operating Supplies & Equipment',
@@ -88,6 +102,14 @@ return [
         'FURNITURE / POTTED PLANTS'          => 'FF&E - Furniture, Fixtures & Equipment',
         'FURNITURE / RUGS & CARPETS'         => 'FF&E - Furniture, Fixtures & Equipment',
         'FURNITURE / VILLA 4'                => 'FF&E - Furniture, Fixtures & Equipment',
+        // Odoo dropped the "FURNITURE / " prefix (Nov 2026)
+        'DECOR'                              => 'FF&E - Furniture, Fixtures & Equipment',
+        'MOS'                                => 'FF&E - Furniture, Fixtures & Equipment',
+        'OUTDOOR FURNITURE'                  => 'FF&E - Furniture, Fixtures & Equipment',
+        'FANZONE'                            => 'FF&E - Furniture, Fixtures & Equipment',
+        'POTTED PLANTS'                      => 'FF&E - Furniture, Fixtures & Equipment',
+        'RUGS & CARPETS'                     => 'FF&E - Furniture, Fixtures & Equipment',
+        'VILLA 4'                            => 'FF&E - Furniture, Fixtures & Equipment',
         'INDOOR SPORTS'                      => 'FF&E - Furniture, Fixtures & Equipment',
         'ELECTRIC & ELECTRONIC'              => 'FF&E - Furniture, Fixtures & Equipment',
         // ^ NOTE: source taxonomy assigns this child to BOTH FF&E and OS&E
@@ -110,14 +132,18 @@ return [
         'MARSHAL'                            => 'SPORTING',
         'SPORT TOTAL'                        => 'SPORTING',
         'SWEEPER'                            => 'SPORTING',
+        'SWEEPER MACHINE'                    => 'SPORTING',
         'TRACK PAINT'                        => 'SPORTING',
 
         // Production elements
         'PRODUCTION ASSETS'                  => 'Production elements',
         'PRODUCTION / SINGNAGE & WAYFINDING' => 'Production elements',
+        'SIGNAGE & WAYFINDING'               => 'Production elements',
+        'SHOW CAR'                           => 'Production elements',
 
         // FIRE AND SAFETY
         'PRODUCTION / FIRE & SAFETY'         => 'FIRE AND SAFETY',
+        'FIRE & SAFETY'                      => 'FIRE AND SAFETY',
 
     ],
 ];

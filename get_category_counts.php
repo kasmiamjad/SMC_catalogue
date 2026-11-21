@@ -24,7 +24,7 @@ $total = 0;
 
 foreach ($data['result']['payload']['product_stock_details'] as $product) {
     $cat = $product['product_category'] ?? null;
-    if (!$cat) continue;
+    if (!$cat || is_hidden_category($cat)) continue;
 
     $total++;
 
