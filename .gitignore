@@ -19,6 +19,6 @@ hub-html-1.5/
 *.zip
 scratch/
 
-# Note: data.json is INTENTIONALLY committed for now.
-# It's a runtime cache from Odoo, but committing it makes the 
-# project reproducible across machines during development.
+# Runtime cache from Odoo, rewritten by fetch.php on the server.
+# Not tracked: a git pull/reset must never overwrite live data.
+data.json
